@@ -1,6 +1,18 @@
 import { test, expect, type Page } from '@playwright/test';
 import { HomePage } from '../pages/home-page'
 import { TopMenuPage } from '../pages/top-menu-page';
+import{
+    BatchInfo,
+    Configuration,
+    EyesRunner,
+    ClassicRunner,
+    VisualGridRunner,
+    BrowserType,
+    DeviceName,
+    ScreenOrientation,
+    Eyes,
+    Target
+} from '@applitools/eyes-playwright'
 
 // AAA
 // POM --> Page Object Model
@@ -8,10 +20,67 @@ import { TopMenuPage } from '../pages/top-menu-page';
 const URL = 'https://playwright.dev/';
 let homePage: HomePage;
 let topmenuPage: TopMenuPage;
+const pageUrl = /.*intro/;
+
+// Applitools
+// export const USER_UKTRAFAST_GRID: boolean = true;
+export const USER_UKTRAFAST_GRID: boolean = false;
+export let Batch: BatchInfo;
+export let Config: Configuration;
+export let Runner: EyesRunner;
+let eyes: Eyes;
+// end of Applitools
+
+// beforeAll for Applitools
+test.beforeAll(async () => {
+
+    if (USER_UKTRAFAST_GRID) {
+        Runner = new VisualGridRunner({testConcurrency: 5});
+    } else {
+        Runner = new ClassicRunner();
+    }
+
+    const runnerName = USER_UKTRAFAST_GRID ? 'Ultrafast Grid' : 'Classic Runner';
+    Batch = new BatchInfo({name: 'Playwright website -  + ${runnerName}'});
+
+    Config = new Configuration();
+    // Config.setApiKey("YOUR_API_KEY");
+
+    Config.setBatch(Batch);
+    if (USER_UKTRAFAST_GRID) {
+        Config.addBrowser(800, 600, BrowserType.CHROME);
+        Config.addBrowser(1600, 1200, BrowserType.FIREFOX);
+        Config.addBrowser(1024, 768, BrowserType.SAFARI);
+        Config.addDeviceEmulation(DeviceName.iPhone_11, ScreenOrientation.PORTRAIT);
+        Config.addDeviceEmulation(DeviceName.Nexus_10, ScreenOrientation.LANDSCAPE);
+    }
+});
+
+
 
 test.beforeEach(async ({page}) => {
+    //Applitools
+    eyes = new Eyes(Runner, Config);
+    await eyes.open(
+        page,
+        'Playwright',
+        test.info().title,
+        {width: 1024, height: 768}
+    );
+    // end of Applitools
+    
     await page.goto(URL);
     homePage = new HomePage (page);
+});
+
+test.afterEach(async ({page}) => {
+    await eyes.close();
+});
+
+test.afterAll(async () => {
+    // forces Playwright to wait synchronously for all visual checkpoints to be processed before the test ends
+    const results = await Runner.getAllTestResults();
+    console.log('Visual test results:', results);
 });
 
 async function clickGetStarted(page:Page) {
@@ -26,6 +95,9 @@ test.describe('Playwright website', () => {
 
     // Expect a title "to contain" a substring.
     await homePage.assertPageTitle();
+
+    // https://applittols.com/docs/api/eyes-sdk-playwright/classes/eyes/check.html#check
+    await eyes.check('Home page', Target.window().fully());
     });
 
     test('get started link', async ({ page }) => {
@@ -69,4 +141,3 @@ test.describe('Playwright website', () => {
 
     });
 })
-
