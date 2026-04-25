@@ -1,0 +1,19 @@
+{
+  "name": "introduction-to-playwright",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:2e2": "npx playwright test tests/",
+    "test:e2ec": "npx playwright test --project=chromium"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@applitools/eyes-playwright": "^1.46.7",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0"
+  }
+}
